@@ -1,0 +1,5 @@
+/.vscode
+/glove.gB
+/logs
+/venv
+*.txt
