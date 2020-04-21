@@ -1,10 +1,9 @@
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
+import requests as req
 
 
 def get_html(url:str) -> str:
-    with urlopen(url) as resp:
-        return resp.read()
+    return req.get(url).content
 
 def get_review_text(html:str) -> str:
     soup = BeautifulSoup(html, "html.parser")

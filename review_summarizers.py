@@ -16,15 +16,11 @@ nltk.download('stopwords')
 
 @dataclass
 class ReviewSentence:
-    publication:str
     raw_sentence:str
     sentence_embedding:List[float]
 
-    def __str__(self):
-        return f"{self.raw_sentence} ({self.publication})"
-
+#ToDo: rename 
 class TextRankSummarizer:
-
 
     def __init__(self, word_embeddings_file_path:str):
         self.stop_words = set(stopwords.words('english'))
@@ -40,28 +36,32 @@ class TextRankSummarizer:
                 coefs = np.asarray(values[1:],dtype="float32")
                 self.word_embeddings[word] = coefs
 
-    def get_top_n_sentences_from_reviews(self, reviews:Dict[str,str], n) -> List[ReviewSentence]:
-        """Gets the top sentences from a review based on how similarly they express the sentiments of reviews written by other reviewers
+    def get_top_sentences(self, review_text:str, n:int = None) -> List[str]:
+        """Gets the top sentences from a review based on how closely they express the sentiment of other sentences in the review
         
         Args:
-            reviews: a dictionary of the media outlet that published the review to the review text
+            text: text of the review
 
             n: the number of sentences to return. Larger values will return more sentences, further down the 
-            ranking with less relevance to the entire body of reviews
+            ranking with less relevance to the entire body of reviews. Default will return all sentences
         
         Returns:
-            A list of sentences in format '{sentece} ({publication})'
+            The top n sentences, ordered from most relevant to least relevant
         """
         if(not self.word_embeddings):
             raise Exception("word_embeddings not loaded must call load_word_embeddings()")
 
-        review_sentences = self._get_review_sentences(reviews)
-        review_sentences_by_rank_desc = TextRankSummarizer._get_review_sentences_by_rank(review_sentences)
-        return [str(rs) for rs in review_sentences_by_rank_desc[0:min(len(review_sentences_by_rank_desc), n)]]
+        review_sentences = self._get_review_sentences(review_text)
 
-    def _get_review_sentences(self, review:Dict[str,str]) -> List[ReviewSentence]:
-        return [ReviewSentence(publication, sentence, self._get_sentence_embedding(sentence))
-            for publication, text in review.items() 
+        similarity_graph = TextRankSummarizer._get_similarity_graph(review_sentences)
+        ranked_sentences = TextRankSummarizer._rank_sentences(similarity_graph)
+        review_sentences_by_rank_desc = [review_sentences[i] for i, score in sorted(ranked_sentences.items(), key = lambda tup: tup[1], reverse= True)]
+
+        end_bound = min(len(review_sentences_by_rank_desc), n) if n else len(review_sentences_by_rank_desc)
+        return [rs.raw_sentence for rs in review_sentences_by_rank_desc[0:end_bound]]
+
+    def _get_review_sentences(self, text:str) -> List[ReviewSentence]:
+        return [ReviewSentence(sentence, self._get_sentence_embedding(sentence)) 
             for sentence in sent_tokenize(text)]
 
     def _get_sentence_embedding(self, sentence: str) -> List[float]:
@@ -80,12 +80,6 @@ class TextRankSummarizer:
         return words
 
     @staticmethod
-    def _get_review_sentences_by_rank(review_sentences: List[ReviewSentence]) -> List[ReviewSentence]:
-        similarity_graph = TextRankSummarizer._get_similarity_graph(review_sentences)
-        ranked_sentences = TextRankSummarizer._rank_sentences(similarity_graph)
-        return [review_sentences[i] for i, score in sorted(ranked_sentences.items(), key = lambda tup: tup[1], reverse= True)]
-
-    @staticmethod
     def _get_similarity_graph(review_sentences: List[ReviewSentence]) -> np.matrix:
         # G[i, j] is the measure of how close i,j are to eachother
         n_sentences = len(review_sentences)
@@ -93,11 +87,11 @@ class TextRankSummarizer:
 
         for i in range(n_sentences):
             for j in range(n_sentences):
-                rs1, rs2 = review_sentences[i], review_sentences[j]
-                if rs1.publication != rs2.publication:
+                if i != j:
+                    rs1, rs2 = review_sentences[i], review_sentences[j]
                     similarity_graph[i, j] = cosine_similarity(
                         [rs1.sentence_embedding], 
-                        [rs2.sentence_embedding])[0,0]   
+                        [rs2.sentence_embedding])[0,0]
 
         return similarity_graph
 
