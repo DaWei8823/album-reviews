@@ -64,14 +64,11 @@ class ScriptBuilder:
         self.inputs = []
         self.outputs = []
 
-
     def start(self, task:Callable[[],BaseDataItem]):
         if tasks:
-            raise Exception(f"Task: {tasks[0].__name__} already at start")
-        
+            raise Exception(f"Task: {tasks[0].__name__} already at start")        
         if len([signature(task).parameters]) > 0:
-            rasie Exception(f"cannot start with {task.__name__} because it takes arguments")
-        
+            raise Exception(f"cannot start with {task.__name__} because it takes arguments")        
         self.tasks.append(task)    
 
     def then(self, task:Callable[[BaseDataItem],BaseDataItem]):
@@ -97,7 +94,6 @@ class ScriptBuilder:
             raise Exception(f"starting task: {start_task.__name__} must return a non-empty list of data items")
 
         outputs = []
-        
 
 
     def get_data(self, task:Callable):
@@ -116,11 +112,6 @@ class ScriptBuilder:
                 input.processed = True
 
 
-
-class ScriptExecutor:
-
-
-    def __init__(self, tasks:List[Callable], base_path:str, recover_task_run_id: int = None):
 
         
 
