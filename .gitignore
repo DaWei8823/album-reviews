@@ -4,4 +4,4 @@
 /venv
 *.txt
 scripts.py
-
+settings.py
