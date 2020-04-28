@@ -1,11 +1,10 @@
 from contextlib import contextmanager
+from models import Album, Artist, Publication, Review
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker, query
 from typing import List 
 
 
-
-#TODO: Change review text to NVarchar and move models to own file
 
 class ReviewRepo:
 

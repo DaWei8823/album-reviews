@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from flask import Flask 
 import jsonpickle as jp
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from repo import MusicRepo, Review
+from repo import ReviewRepo, Review
 from review_summarizers import TextRankSummarizer
 import settings
 
@@ -15,8 +16,15 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
-repo = MusicRepo(settings.connection_string)
-review_summarizer = TextRankSummarizer(settings.word_embeddings_file_path)
+repo = ReviewRepo(settings.connection_string)
+review_summarizer = TextRankSummarizer(settings.word_embeddings_path)
+
+
+@dataclass
+class ReviewSummary:
+    publication:str
+    rating_desc:str
+    top_sentence:str
 
 @app.route('/review/<artist>/<album>', methods = ['GET'])
 def get_review(artist = None, album = None):
@@ -30,15 +38,10 @@ def get_review(artist = None, album = None):
 
 def get_reviews_summary(review:Review) -> ReviewSummary:
     publication = review.publication.publication_name
-    top_sentence = TextRankSummarizer.get_top_sentences(review.review_text, 1)[0]
+    top_sentence = review_summarizer.get_top_sentences(review.review_text, 1)[0]
     rating_desc = f"{review.score}/{review.publication.max_score}"
     
     return ReviewSummary(publication, top_sentence, rating_desc)
 
 
-@dataclass
-class ReviewSummary:
-    publication:str
-    rating_desc:str
-    top_sentence:str
 
