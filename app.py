@@ -1,37 +1,44 @@
-import review_scraper as rs
 from flask import Flask 
-from json import dumps
-from logging.handlers import TimedRotatingFileHandler
-import logging
-import datetime as dt
-import re
 import jsonpickle as jp
-from flask.ext.sqlalchemy
+import logging
+from logging.handlers import TimedRotatingFileHandler
+from repo import MusicRepo, Review
+from review_summarizers import TextRankSummarizer
+import settings
+
+#TODO: handle misformed requests
 
 app = Flask(__name__)
 
 handler = TimedRotatingFileHandler("logs/PitchforkApi.log", when="midnight", interval=1)
-
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mssql+pyodbc://localhost\\SQLEXPRESS/Music?driver=SQL+Server&trusted_connection=yes"
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-
-db = SqlAlchemy(app)
-
-@app.route('/')
-def hello_asa():
-    return "hi asa!"
+repo = MusicRepo(settings.connection_string)
+review_summarizer = TextRankSummarizer(settings.word_embeddings_file_path)
 
 @app.route('/review/<artist>/<album>', methods = ['GET'])
 def get_review(artist = None, album = None):
     try:
-        review = rs.get_album_review_from_artist_and_album(artist, album)
-        return jp.encode(review)
+        reviews = repo.get_reviews(artist, album)
+        review_summaries = [get_reviews_summary(review) for review in reviews]
+        return jp.encode(review_summaries)
     except Exception as e:
         app.logger.error(f"Exception getting review for artist: {artist} and album: {album}  {str(e)}")
 
 
+def get_reviews_summary(review:Review) -> ReviewSummary:
+    publication = review.publication.publication_name
+    top_sentence = TextRankSummarizer.get_top_sentences(review.review_text, 1)[0]
+    rating_desc = f"{review.score}/{review.publication.max_score}"
+    
+    return ReviewSummary(publication, top_sentence, rating_desc)
+
+
+@dataclass
+class ReviewSummary:
+    publication:str
+    rating_desc:str
+    top_sentence:str
 
