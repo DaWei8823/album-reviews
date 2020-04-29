@@ -4,7 +4,7 @@ import jsonpickle as jp
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from repo import ReviewRepo, Review
-from review_summarizers import TextRankSummarizer
+from summarizer import TextRankSummarizer
 import settings
 
 #TODO: handle misformed requests
