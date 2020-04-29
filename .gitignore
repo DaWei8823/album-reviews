@@ -1,9 +1,11 @@
+/__pycache__
 /.vscode
-/glove.gB
+/glove.6B
 /logs
 /venv
-/web-scraping
+/scraping
 *.txt
+review_scraper.py
 scripts.py
 settings.py
-review_scraper.py
+
