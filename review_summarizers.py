@@ -55,7 +55,9 @@ class TextRankSummarizer:
 
         similarity_graph = TextRankSummarizer._get_similarity_graph(review_sentences)
         ranked_sentences = TextRankSummarizer._rank_sentences(similarity_graph)
-        review_sentences_by_rank_desc = [review_sentences[i] for i, score in sorted(ranked_sentences.items(), key = lambda tup: tup[1], reverse= True)]
+        
+        review_sentences_by_rank_desc = [review_sentences[i] for i, score 
+            in sorted(ranked_sentences.items(), key = lambda tup: tup[1], reverse= True)]
 
         end_bound = min(len(review_sentences_by_rank_desc), n) if n else len(review_sentences_by_rank_desc)
         return [rs.raw_sentence for rs in review_sentences_by_rank_desc[0:end_bound]]

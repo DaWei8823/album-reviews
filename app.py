@@ -19,6 +19,7 @@ app.logger.addHandler(handler)
 repo = ReviewRepo(settings.connection_string)
 review_summarizer = TextRankSummarizer(settings.word_embeddings_path)
 
+review_summarizer.load_word_embeddings()
 
 @dataclass
 class ReviewSummary:
@@ -41,7 +42,7 @@ def get_reviews_summary(review:Review) -> ReviewSummary:
     top_sentence = review_summarizer.get_top_sentences(review.review_text, 1)[0]
     rating_desc = f"{review.score}/{review.publication.max_score}"
     
-    return ReviewSummary(publication, top_sentence, rating_desc)
+    return ReviewSummary(publication,rating_desc, top_sentence)
 
 
 

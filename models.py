@@ -50,7 +50,7 @@ class Review(Base):
     review_text = Column("ReviewText", NVARCHAR(), nullable=False)
     score = Column("Score", Numeric(4,2))
 
-    publication = relationship("Publication", back_populates = "reviews")
+    publication = relationship("Publication", back_populates = "reviews", lazy='joined')
     album = relationship("Album", back_populates="reviews")
 
     UniqueConstraint("AlbumId", "PublicationId")
