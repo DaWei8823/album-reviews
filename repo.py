@@ -19,7 +19,7 @@ class ReviewRepo:
         return list(self._get(Review, predicate))
 
     def add_review(self, album_title:str, artist_name, publication_name:str, url:str, review_text:str, score:float):
-        """adds review if it no review for that publication and album exist else does nothing. Adds the artist and
+        """adds review if there is no review for that publication and album else does nothing. Adds the artist and
            album if not present. Uses crude heuristic to add publication and max score if not present"""
 
         predicate = and_(Review.album.has(Album.title == album_title), 
