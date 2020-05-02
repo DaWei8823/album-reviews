@@ -19,7 +19,7 @@ class ReviewSentence:
     raw_sentence:str
     sentence_embedding:List[float]
 
-#ToDo: rename 
+        
 class TextRankSummarizer:
 
     def __init__(self, word_embeddings_file_path:str):
